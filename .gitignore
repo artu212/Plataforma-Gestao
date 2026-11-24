@@ -1,0 +1,21 @@
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Dependências
+node_modules/
+
+# Arquivos de ambiente e credenciais
+.env
+.env.*
+!.env.example
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*

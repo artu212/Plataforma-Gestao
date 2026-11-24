@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#10213b">
+    <title>Hidrogeo | Apontamentos e Financeiro</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+        <div class="brand"><span class="brand-symbol" aria-hidden="true">≋</span>
+            <div><strong>hidrogeo<span class="brand-dot">.</span></strong><small>GESTÃO DE PROJETOS</small></div>
+        </div>
+        <div class="sidebar-group-label">ESPAÇO DE TRABALHO</div>
+        <nav class="sidebar-nav" aria-label="Navegação principal">
+            <button type="button" class="nav-link active" data-view="apontamentos"><span class="nav-icon">◷</span>Apontamentos
+            </button>
+            <button type="button" class="nav-link finance-toggle" id="finance-toggle" aria-expanded="false"
+                    aria-controls="finance-submenu"><span class="nav-icon">▣</span><span>Financeiro</span><span
+                    class="nav-chevron" aria-hidden="true">⌄</span></button>
+            <div class="finance-submenu" id="finance-submenu" hidden>
+                <button type="button" class="finance-subitem" data-finance="receitas">Receitas</button>
+                <button type="button" class="finance-subitem" data-finance="despesas">Despesas</button>
+                <button type="button" class="finance-subitem" data-finance="aquisicoes">Aquisições</button>
+            </div>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="preview"><span class="status-dot"></span> Prévia privada</div>
+            <div class="user"><span class="avatar">MC</span><span><strong>Mariana Costa</strong><small>Modelador</small></span>
+            </div>
+        </div>
+    </aside>
+    <div class="workspace">
+        <header class="topbar">
+            <button type="button" class="mobile-menu" id="mobile-menu" aria-label="Abrir menu">☰</button>
+            <div class="breadcrumb">Gestão de projetos <span>/</span> <strong
+                    id="breadcrumb-current">Apontamentos</strong></div>
+            <div class="today" id="today-label"></div>
+        </header>
+        <main class="main-content">
+            <div class="demo-banner">Ambiente de demonstração. Use nomes e dados fictícios. Os apontamentos são
+                armazenados neste navegador.
+            </div>
+            <section id="view-apontamentos" class="page-view">
+                <div class="page-heading"><h1>Apontamentos</h1>
+                    <p>Registre suas horas e acompanhe suas atividades.</p></div>
+                <section class="surface">
+                    <div class="surface-heading"><h2 id="form-title">Lançar horas</h2>
+                        <p>Preencha os dados da atividade para salvar seu apontamento.</p></div>
+                    <form id="entry-form" class="entry-form">
+                        <div class="form-grid">
+                            <label class="field">Data<input id="entry-date" type="date" required></label>
+                            <label class="field">Projeto
+                                <input id="entry-project" type="text" list="project-options" maxlength="100"
+                                       placeholder="Pesquisar código ou nome do projeto" autocomplete="off" required>
+                                <datalist id="project-options"></datalist>
+                                <small class="field-hint">Selecione um projeto da lista. Projetos são cadastrados em
+                                    outro módulo.</small>
+                            </label>
+                            <div class="field field-wide">
+                                <div class="field-label-row"><label for="entry-task">Tarefa realizada</label>
+                                    <button type="button" id="new-task-button"
+                                            class="button button-outline button-small">+ Nova tarefa
+                                    </button>
+                                </div>
+                                <input id="entry-task" type="text" list="task-options" maxlength="500"
+                                       placeholder="Pesquisar e selecionar uma tarefa" autocomplete="off" required>
+                                <datalist id="task-options"></datalist>
+                                <small class="field-hint">Não encontrou? Cadastre uma nova tarefa.</small>
+                            </div>
+                            <div class="field"><span>Duração</span>
+                                <div class="duration-fields"><label>Horas<input id="entry-hours" type="number" min="0"
+                                                                                max="999" step="1" value="0"
+                                                                                required></label><label>Minutos<input
+                                        id="entry-minutes" type="number" min="0" max="59" step="1" value="0"
+                                        required></label></div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" id="save-button" class="button button-primary">Salvar apontamento
+                            </button>
+                            <button type="button" id="cancel-edit" class="button button-outline" hidden>Cancelar
+                                edição
+                            </button>
+                        </div>
+                        <p class="helper-text" id="form-feedback" role="status">Você pode registrar várias tarefas no
+                            mesmo dia.</p>
+                    </form>
+                </section>
+                <section class="surface history-surface">
+                    <div class="surface-heading history-heading">
+                        <div><h2>Meus apontamentos</h2>
+                            <p><span id="monthly-count">0</span> lançamentos • <strong id="monthly-total">00h
+                                00min</strong> no mês</p></div>
+                        <label class="month-field">Mês de referência<input id="month-filter" type="month"></label></div>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Projeto</th>
+                                <th>Tarefa</th>
+                                <th>Duração</th>
+                                <th>Ações</th>
+                            </tr>
+                            </thead>
+                            <tbody id="entries-body">
+                            <tr class="empty-row">
+                                <td colspan="5">Nenhum apontamento para exibir.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="history-footer"><span>Total do período: <strong
+                            id="history-total">00h 00min</strong></span>
+                        <button type="button" id="export-button" class="button button-outline">Exportar Excel</button>
+                    </div>
+                </section>
+                <section class="surface backup-surface">
+                    <div><h2>Backup dos registros</h2>
+                        <p>Os dados ficam apenas neste navegador. Faça cópias periódicas.</p></div>
+                    <div class="backup-actions">
+                        <button type="button" id="backup-button" class="button button-outline">Baixar backup</button>
+                        <button type="button" id="restore-button" class="button button-outline">Restaurar backup
+                        </button>
+                        <input id="restore-file" type="file" accept=".json,application/json" hidden></div>
+                </section>
+            </section>
+            <dialog id="new-task-dialog" class="task-dialog" aria-labelledby="new-task-title">
+                <form id="new-task-form" class="task-dialog-content">
+                    <h2 id="new-task-title">Cadastrar nova tarefa</h2>
+                    <p>Cadastre uma tarefa para reutilizá-la nos apontamentos. Na plataforma definitiva, ela será
+                        compartilhada com todos.</p>
+                    <label class="field" for="new-task-name">Nome da tarefa
+                        <input id="new-task-name" type="text" maxlength="500"
+                               placeholder="Ex.: Elaboração de relatório técnico" required>
+                    </label>
+                    <p id="task-feedback" class="helper-text" role="status"></p>
+                    <div class="form-actions">
+                        <button type="submit" class="button button-primary">Cadastrar tarefa</button>
+                        <button type="button" id="close-task-dialog" class="button button-outline">Cancelar</button>
+                    </div>
+                </form>
+            </dialog>
+            <section id="view-financeiro" class="page-view" hidden>
+                <div class="page-heading"><h1 id="finance-page-title">Receitas</h1>
+                    <p>Acompanhe as movimentações financeiras dos projetos.</p></div>
+                <section class="surface finance-surface">
+                    <div class="finance-placeholder"><h2 id="finance-title">Receitas</h2>
+                        <p id="finance-description">Área reservada para o futuro controle de receitas e notas fiscais
+                            dos projetos.</p><span class="coming-soon">Módulo em planejamento</span></div>
+                </section>
+            </section>
+        </main>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="js/script.js" defer></script>
+</body>
+</html>
