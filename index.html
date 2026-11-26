@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#10213b">
+    <meta name="theme-color" content="#07111D">
     <title>Hidrogeo | Apontamentos e Financeiro</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -23,7 +23,6 @@
             <div class="finance-submenu" id="finance-submenu" hidden>
                 <button type="button" class="finance-subitem" data-finance="receitas">Receitas</button>
                 <button type="button" class="finance-subitem" data-finance="despesas">Despesas</button>
-                <button type="button" class="finance-subitem" data-finance="aquisicoes">Aquisições</button>
             </div>
         </nav>
         <div class="sidebar-bottom">
@@ -53,8 +52,8 @@
                         <div class="form-grid">
                             <label class="field">Data<input id="entry-date" type="date" required></label>
                             <label class="field">Projeto
-                                <input id="entry-project" type="text" list="project-options" maxlength="100"
-                                       placeholder="Pesquisar código ou nome do projeto" autocomplete="off" required>
+                                <input id="entry-project" list="project-options" required autocomplete="off"
+                                       maxlength="100" placeholder="Pesquisar código ou nome do projeto">
                                 <datalist id="project-options"></datalist>
                                 <small class="field-hint">Selecione um projeto da lista. Projetos são cadastrados em
                                     outro módulo.</small>
@@ -65,17 +64,18 @@
                                             class="button button-outline button-small">+ Nova tarefa
                                     </button>
                                 </div>
-                                <input id="entry-task" type="text" list="task-options" maxlength="500"
-                                       placeholder="Pesquisar e selecionar uma tarefa" autocomplete="off" required>
+                                <input id="entry-task" list="task-options" required autocomplete="off" maxlength="500"
+                                       placeholder="Pesquisar e selecionar tarefa">
                                 <datalist id="task-options"></datalist>
                                 <small class="field-hint">Não encontrou? Cadastre uma nova tarefa.</small>
                             </div>
-                            <div class="field"><span>Duração</span>
-                                <div class="duration-fields"><label>Horas<input id="entry-hours" type="number" min="0"
-                                                                                max="999" step="1" value="0"
-                                                                                required></label><label>Minutos<input
-                                        id="entry-minutes" type="number" min="0" max="59" step="1" value="0"
-                                        required></label></div>
+                            <div class="field field-wide"><span>Período</span>
+                                <div class="duration-fields"><label>Início<input id="entry-start" type="time" required></label><label>Fim<input
+                                        id="entry-end" type="time" required></label></div>
+                                <label for="entry-duration">Duração calculada</label>
+                                <input id="entry-duration" type="text" value="00h 00min" readonly aria-live="polite">
+                                <small class="field-hint">O horário final deve ser posterior ao inicial, no mesmo
+                                    dia.</small>
                             </div>
                         </div>
                         <div class="form-actions">
@@ -94,7 +94,16 @@
                         <div><h2>Meus apontamentos</h2>
                             <p><span id="monthly-count">0</span> lançamentos • <strong id="monthly-total">00h
                                 00min</strong> no mês</p></div>
-                        <label class="month-field">Mês de referência<input id="month-filter" type="month"></label></div>
+                        <div class="hours-filters"><label class="field">Mês de referência<input id="month-filter"
+                                                                                                type="month"
+                                                                                                required></label>
+                            <label class="field">Dia específico<input id="day-filter" type="date"></label>
+                            <button type="button" class="button button-primary" id="apply-hours-filter">Aplicar
+                                filtros
+                            </button>
+                            <button type="button" class="button button-outline" id="clear-day">Limpar dia</button>
+                        </div>
+                    </div>
                     <div class="table-scroll">
                         <table>
                             <thead>
@@ -102,30 +111,22 @@
                                 <th>Data</th>
                                 <th>Projeto</th>
                                 <th>Tarefa</th>
+                                <th>Período</th>
                                 <th>Duração</th>
                                 <th>Ações</th>
                             </tr>
                             </thead>
                             <tbody id="entries-body">
                             <tr class="empty-row">
-                                <td colspan="5">Nenhum apontamento para exibir.</td>
+                                <td colspan="6">Nenhum apontamento para exibir.</td>
                             </tr>
                             </tbody>
                         </table>
                     </div>
                     <div class="history-footer"><span>Total do período: <strong
                             id="history-total">00h 00min</strong></span>
-                        <button type="button" id="export-button" class="button button-outline">Exportar Excel</button>
+
                     </div>
-                </section>
-                <section class="surface backup-surface">
-                    <div><h2>Backup dos registros</h2>
-                        <p>Os dados ficam apenas neste navegador. Faça cópias periódicas.</p></div>
-                    <div class="backup-actions">
-                        <button type="button" id="backup-button" class="button button-outline">Baixar backup</button>
-                        <button type="button" id="restore-button" class="button button-outline">Restaurar backup
-                        </button>
-                        <input id="restore-file" type="file" accept=".json,application/json" hidden></div>
                 </section>
             </section>
             <dialog id="new-task-dialog" class="task-dialog" aria-labelledby="new-task-title">
@@ -147,16 +148,256 @@
             <section id="view-financeiro" class="page-view" hidden>
                 <div class="page-heading"><h1 id="finance-page-title">Receitas</h1>
                     <p>Acompanhe as movimentações financeiras dos projetos.</p></div>
-                <section class="surface finance-surface">
-                    <div class="finance-placeholder"><h2 id="finance-title">Receitas</h2>
-                        <p id="finance-description">Área reservada para o futuro controle de receitas e notas fiscais
-                            dos projetos.</p><span class="coming-soon">Módulo em planejamento</span></div>
+                <section id="receipts-panel" hidden>
+                    <div class="surface expense-toolbar"><label class="field">Projeto<select
+                            id="rr-project"></select></label></div>
+                    <div class="surface revenue-tabs">
+                        <button type="button" class="button button-primary" id="rr-main-tab" aria-pressed="true">
+                            Principal
+                        </button>
+                        <button type="button" class="button button-outline" id="rr-flow-tab" aria-pressed="false">Fluxo
+                            de receitas
+                        </button>
+                    </div>
+                    <div class="revenue-kpis" id="rr-kpis"></div>
+                    <section class="surface" id="rr-main">
+                        <div class="surface-heading"><h2>Dados contratuais</h2>
+                            <p>Informações do projeto selecionado.</p></div>
+                        <form id="rc-form" class="entry-form">
+                            <div class="form-grid"><label class="field field-wide">Projeto<input id="rc-client" readonly
+                                                                                                 aria-readonly="true"></label>
+                                <label class="field">Responsável<select id="rc-owner">
+                                    <option value="">Selecionar</option>
+                                </select></label>
+                                <label class="field">Número do contrato<input id="rc-contract" maxlength="80"></label>
+                                <label class="field">Tipo de faturamento<select id="rc-type">
+                                    <option value="">Selecionar</option>
+                                    <option>Medição</option>
+                                    <option>Parcela fixa</option>
+                                    <option>Por entrega</option>
+                                    <option>Mensal</option>
+                                    <option>Mobilização</option>
+                                    <option>Outros</option>
+                                </select></label>
+                                <label class="field">Valor bruto (R$)<input id="rc-gross" type="number" min="0"
+                                                                            step="0.01"></label>
+                                <label class="field">Total liberado (R$)<input id="rc-released" type="number" min="0"
+                                                                               step="0.01"></label>
+                                <label class="field">Valor líquido (R$)<input id="rc-net" type="number" min="0"
+                                                                              step="0.01"></label>
+                                <label class="field">Valor total dos recursos (R$)<input id="rc-resources" type="number"
+                                                                                         min="0" step="0.01"></label>
+                                <label class="field">Número da proposta<input id="rc-proposal" maxlength="80"></label>
+                                <label class="field">Data da proposta<input id="rc-proposal-date" type="date"></label>
+                                <label class="field field-wide">Comentário<textarea id="rc-comment" rows="3"></textarea></label>
+                            </div>
+                            <div class="form-actions">
+                                <button class="button button-primary">Salvar dados contratuais</button>
+                            </div>
+                            <p id="rc-feedback" role="status"></p></form>
+                    </section>
+                    <section id="rr-flow" hidden>
+                        <div class="surface expense-toolbar"><label class="field">Buscar receita<input id="rr-search"
+                                                                                                       type="search"></label>
+                            <button type="button" class="button button-primary" id="rr-add">+ Adicionar receita</button>
+                        </div>
+                        <section class="surface">
+                            <div class="table-scroll">
+                                <table class="revenue-table">
+                                    <thead>
+                                    <tr>
+                                        <th>Receita</th>
+                                        <th>Previsão</th>
+                                        <th>Valor previsto</th>
+                                        <th>Envio BM</th>
+                                        <th>Faturamento</th>
+                                        <th>NF</th>
+                                        <th>Valor NF</th>
+                                        <th>Desvio</th>
+                                        <th>Previsão receb.</th>
+                                        <th>Recebimento</th>
+                                        <th>Recebido</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="rr-body"></tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </section>
+                    <p id="rr-feedback" role="status"></p></section>
+                <dialog id="rr-dialog" class="expense-drawer" aria-labelledby="rr-title">
+                    <form id="rr-form">
+                        <header class="expense-drawer-header"><h2 id="rr-title">Adicionar receita</h2>
+                            <button type="button" id="rr-close" class="button button-outline" aria-label="Fechar">×
+                            </button>
+                        </header>
+                        <div class="expense-drawer-fields"><label class="field">Projeto<input id="rr-linked"
+                                                                                              readonly></label><label
+                                class="field">Descrição da receita *<input id="rr-name" required
+                                                                           maxlength="150"></label>
+                            <label class="field">Tarefa (opcional)<input id="rr-task" list="task-options"
+                                                                         maxlength="500"></label>
+                            <label class="field">Data prevista de faturamento *<input id="rr-plan-date" type="date"
+                                                                                      required></label>
+                            <label class="field">Valor bruto previsto (R$) *<input id="rr-plan" type="number" min="0.01"
+                                                                                   step="0.01" required></label>
+                            <label class="field">Data de envio do boletim de medição<input id="rr-bm"
+                                                                                           type="date"></label>
+                            <label class="field">Data de envio à contabilidade / faturamento<input id="rr-billing"
+                                                                                                   type="date"></label>
+                            <label class="field">Número da nota fiscal<input id="rr-invoice" maxlength="80"></label>
+                            <label class="field">Valor bruto efetivo da nota (R$)<input id="rr-actual" type="number"
+                                                                                        min="0.01" step="0.01"></label>
+                            <label class="field">Data prevista de recebimento<input id="rr-due" type="date"></label>
+                            <label class="field">Data efetiva do recebimento<input id="rr-paid-date"
+                                                                                   type="date"></label>
+                            <label class="field">Valor efetivamente recebido (R$)<input id="rr-paid" type="number"
+                                                                                        min="0.01"
+                                                                                        step="0.01"></label><label
+                                    class="field">Responsável<select id="rr-owner">
+                                <option value="">Selecionar</option>
+                            </select></label><label class="field">Anexar nota fiscal (PDF, PNG ou JPEG, até 10 MB)<input
+                                    id="rr-file" type="file" accept="application/pdf,image/png,image/jpeg"></label>
+                            <div id="rr-attachment"></div>
+                            <label class="field">Comentário (opcional)<textarea id="rr-comment"
+                                                                                rows="3"></textarea></label>
+                            <p id="rr-error" role="status" class="helper-text error"></p></div>
+                        <footer class="expense-drawer-footer">
+                            <button type="button" class="button button-outline expense-remove" id="rr-delete" hidden>
+                                Excluir
+                            </button>
+                            <button class="button button-primary" id="rr-save">Salvar receita</button>
+                        </footer>
+                    </form>
+                </dialog>
+                <section id="expenses-panel" hidden>
+                    <div class="surface expense-toolbar">
+                        <label class="field">Projeto<select id="expense-project"></select></label>
+                        <label class="field">Buscar despesa<input id="expense-search" type="search"
+                                                                  placeholder="Nome, tarefa ou recurso"></label>
+                        <button type="button" class="button button-outline" id="markup-open">Configurar markup</button>
+                        <button type="button" class="button button-primary" id="expense-add">+ Adicionar despesa
+                        </button>
+                    </div>
+                    <section class="surface">
+                        <div class="table-scroll">
+                            <table class="expense-table">
+                                <thead>
+                                <tr>
+                                    <th>Nome da despesa</th>
+                                    <th>Tarefa</th>
+                                    <th>Data da despesa</th>
+                                    <th>Projeto</th>
+                                    <th>Recurso</th>
+                                    <th>Valor unitário</th>
+                                    <th>Qtd.</th>
+                                    <th>Total real</th>
+                                    <th>Real com markup</th>
+                                    <th>Data planejada</th>
+                                    <th>Planejado (já com markup)</th>
+                                    <th>Desvio com markup</th>
+                                    <th>Responsável</th>
+                                    <th>Última alteração</th>
+                                    <th>Ações</th>
+                                </tr>
+                                </thead>
+                                <tbody id="expense-body"></tbody>
+                            </table>
+                        </div>
+                        <div class="history-footer"><span id="expense-count"></span><strong id="expense-total"></strong>
+                        </div>
+                    </section>
+                    <p id="expense-feedback" class="helper-text" role="status"></p>
                 </section>
+                <dialog id="markup-dialog" class="task-dialog" aria-labelledby="markup-title">
+                    <form id="markup-config" class="task-dialog-content">
+                        <h2 id="markup-title">Markup do projeto</h2>
+                        <p id="markup-project-label"></p>
+                        <label class="field">Divisor<input id="markup-divisor" type="number" min="0.0001" max="100"
+                                                           step="0.0001" required></label>
+                        <label class="field">Multiplicador<input id="markup-factor" type="number" min="0.0001" max="100"
+                                                                 step="0.0001" required></label>
+                        <p id="markup-config-preview" aria-live="polite"></p>
+                        <p class="field-hint">Novos registros usam a nova fórmula. Registros existentes mantêm sua
+                            fórmula original.</p>
+                        <p id="markup-config-feedback" role="status"></p>
+                        <div class="form-actions">
+                            <button class="button button-primary" type="submit">Salvar configuração</button>
+                            <button class="button button-outline" type="button" id="markup-close">Cancelar</button>
+                        </div>
+                    </form>
+                </dialog>
+                <dialog id="expense-dialog" class="expense-drawer" aria-labelledby="expense-title">
+                    <form id="expense-form">
+                        <header class="expense-drawer-header"><h2 id="expense-title">Adicionar despesa</h2>
+                            <button type="button" class="button button-outline" id="expense-close" aria-label="Fechar">
+                                ×
+                            </button>
+                        </header>
+                        <div class="expense-drawer-fields">
+                            <label class="field">Projeto vinculado<input id="expense-linked-project" readonly></label>
+                            <label class="field">Nome da despesa *<input id="expense-name" maxlength="150" required
+                                                                         placeholder="Ex.: Hospedagem em campo"></label>
+                            <label class="field">Tarefa *<input id="expense-task" list="task-options" required
+                                                                maxlength="500" autocomplete="off"
+                                                                placeholder="Pesquisar tarefa"></label>
+                            <label class="field">Recurso (Despesa) *<select id="expense-resource" required>
+                                <option value="">Selecionar recurso</option>
+                            </select></label>
+                            <label class="expense-check"><input id="expense-planned" type="checkbox"> Despesa planejada</label>
+                            <fieldset id="expense-plan-fields" class="expense-group" hidden disabled>
+                                <legend>Planejamento</legend>
+                                <label class="field">Data planejada *<input id="expense-plan-date" type="date" required></label>
+                                <label class="field">Valor unitário planejado (já com markup) (R$) *<input
+                                        id="expense-plan-value" type="number" min="0.01" max="999999999" step="0.01"
+                                        required></label>
+                                <label class="expense-check"><input id="expense-realized" type="checkbox"> Registrar
+                                    valor real agora</label>
+                            </fieldset>
+                            <fieldset id="expense-real-fields" class="expense-group">
+                                <legend>Despesa real</legend>
+                                <label class="field">Data da despesa *<input id="expense-date" type="date"
+                                                                             required></label>
+
+                                <label class="field">Valor unitário (R$) *<input id="expense-value" type="number"
+                                                                                 min="0.01" max="999999999" step="0.01"
+                                                                                 required placeholder="0,00"></label>
+                                <label class="field">Valor unitário com markup<input id="markup-unit" readonly></label>
+                                <label class="field">Quantidade *<input id="expense-quantity" type="number" min="0.01"
+                                                                        max="999999" step="0.01" value="1"
+                                                                        required></label>
+                            </fieldset>
+                            <label class="field">Usuário responsável *<select id="expense-owner" required>
+                                <option value="">Selecionar usuário</option>
+                            </select></label>
+                            <label class="field">Descrição (opcional)<textarea id="expense-description" rows="4"
+                                                                               maxlength="2000"
+                                                                               placeholder="Informações complementares"></textarea></label>
+                            <div class="expense-summary"><span>Total real da despesa</span><strong id="expense-preview">R$
+                                0,00</strong></div>
+                            <div class="expense-summary"><span>Total real com markup</span><strong
+                                    id="markup-total">—</strong></div>
+                            <p id="markup-formula" class="field-hint"></p>
+                            <section class="expense-group" id="expense-audit" hidden><h3>Histórico de alterações</h3>
+                                <div id="expense-audit-list"></div>
+                            </section>
+                            <p id="expense-form-feedback" class="helper-text error" role="status"></p>
+                        </div>
+                        <footer class="expense-drawer-footer">
+                            <button type="button" class="button button-outline expense-remove" id="expense-remove"
+                                    hidden>Excluir registro
+                            </button>
+                            <button type="button" class="button button-outline" id="expense-cancel">Cancelar</button>
+                            <button type="submit" class="button button-primary">Salvar despesa</button>
+                        </footer>
+                    </form>
+                </dialog>
             </section>
         </main>
     </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="js/script.js" defer></script>
 </body>
 </html>
